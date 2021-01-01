@@ -45,6 +45,7 @@ ui <- navbarPage(
                     column(
                         width = 8,
                         h2("Enter Tasks", align = "center"),
+                        hr(),
                         fluidRow(
                             column(
                                 width = 4,
@@ -92,7 +93,24 @@ ui <- navbarPage(
                                     label = "Additional Notes:"
                                 )
                             )
-                        )
+                        ),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                actionButton(
+                                    "sub_go_task",
+                                    label = "Submit Task",
+                                    icon = icon("check")
+                                )
+                            ),
+                            column(
+                                width = 4
+                            ),
+                            column(
+                                width = 4
+                            )
+                        ),
+                        hr()
                     ),
                     column(
                         width = 4
@@ -106,6 +124,17 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
+    
+    refresh <- function() {
+        
+        updateDateInput(session, "sub_date", value = today())
+        updateTextInput(session, "sub_start", value = "")
+        updateTextInput(session, "sub_end", value = "")
+        updateSelectInput(session, "sub_group", selected = "")
+        updateSelectInput(session, "sub_subgroup", selected = "")
+        updateTextInput(session, "sub_notes", value = "")
+        
+    }
 
     output$sub_subgroup <- renderUI({
         
@@ -146,6 +175,34 @@ server <- function(input, output, session) {
             selected = "",
             multiple = F
         )
+        
+    })
+    
+    observeEvent(input$sub_go_task, {
+        
+        data <- data.frame(
+            TaskDate = input$sub_date
+            ,StartTime = input$sub_start
+            ,EndTime = input$sub_end
+            ,TaskGroup = input$sub_group
+            ,TaskSubGroup = input$sub_subgroup
+            ,Notes = input$sub_notes
+        )
+        
+        con_tsk <- dbConnect(
+            odbc::odbc(),
+            .connection_string = conf$con_str,
+            timeout = 5
+        )
+        
+        dbAppendTable(
+            conn = con_tsk,
+            name = SQL(conf$table),
+            value = data
+        )
+        
+        dbDisconnect(con_tsk)
+        refresh()
         
     })
     
