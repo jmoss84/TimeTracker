@@ -25,6 +25,8 @@ task_groups <- c(
     ,""
 )
 
+conf <- config::get()
+
 ui <- navbarPage(
     
     "Time Tracker",
