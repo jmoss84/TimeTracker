@@ -11,6 +11,7 @@ library(rvest)
 library(jsonlite)
 library(AzureAuth)
 library(AzureKeyVault)
+library(DT)
 library(shiny)
 library(shinythemes)
 
@@ -169,7 +170,13 @@ ui <- navbarPage(
                         hr()
                     ),
                     column(
-                        width = 4
+                        width = 4,
+                        column(
+                            width = 12,
+                            h2("Task Table", align = "center"),
+                            hr(),
+                            dataTableOutput("sub_tbl_tasks")
+                        )
                     )
                 )
             )
@@ -180,6 +187,23 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
+    
+    con_tsk <- dbConnect(
+        odbc::odbc(),
+        .connection_string = conf$con_str,
+        timeout = 5
+    )
+    
+    rv <- reactiveValues(
+        
+        dat = dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
+        )
+        
+    )
+    
+    dbDisconnect(con_tsk)
     
     refresh <- function() {
         
@@ -197,6 +221,19 @@ server <- function(input, output, session) {
         updateSelectInput(session, "sub_subgroup2", selected = "")
         updateTextInput(session, "sub_notes2", value = "")
         
+        con_tsk <- dbConnect(
+            odbc::odbc(),
+            .connection_string = conf$con_str,
+            timeout = 5
+        )
+        
+        rv$dat <- dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
+        )
+        
+        dbDisconnect(con_tsk)
+        
     }
 
     output$sub_subgroup <- renderUI({
@@ -207,7 +244,7 @@ server <- function(input, output, session) {
             
         } else if (input$sub_group == "Health") {
             
-            subgroup <- c("Exercise", "Reading", "Language", "Other")
+            subgroup <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language", "Other")
             
         } else if (input$sub_group == "Professional") {
             
@@ -249,7 +286,7 @@ server <- function(input, output, session) {
             
         } else if (input$sub_group2 == "Health") {
             
-            subgroup2 <- c("Exercise", "Reading", "Language", "Other")
+            subgroup2 <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language", "Other")
             
         } else if (input$sub_group2 == "Professional") {
             
@@ -343,6 +380,25 @@ server <- function(input, output, session) {
         
         dbDisconnect(con_tsk)
         refresh()
+        
+    })
+    
+    output$sub_tbl_tasks <- renderDataTable({
+        
+        DT::datatable(
+            options = list(pageLength = 8, scrollX = T),
+            rownames = F,
+            
+            rv$dat %>% 
+                select(
+                    -ID
+                    ,-TaskLevel
+                ) %>% 
+                arrange(
+                    desc(ImportTimestamp)
+                )
+            
+        )
         
     })
     
