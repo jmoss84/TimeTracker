@@ -240,7 +240,7 @@ server <- function(input, output, session) {
         
         if (input$sub_group == "Family") {
             
-            subgroup <- c("Logan", "Ash", "House", "Meals", "Walks", "Family Finance", "Improvements", "Other")
+            subgroup <- c("Logan", "Ash", "Family Time", "House", "Meals", "Walks", "Family Finance", "Improvements", "Other")
             
         } else if (input$sub_group == "Health") {
             
@@ -282,7 +282,7 @@ server <- function(input, output, session) {
         
         if (input$sub_group2 == "Family") {
             
-            subgroup2 <- c("Logan", "Ash", "House", "Meals", "Walks", "Family Finance", "Improvements", "Other")
+            subgroup2 <- c("Logan", "Ash", "Family Time", "House", "Meals", "Walks", "Family Finance", "Improvements", "Other")
             
         } else if (input$sub_group2 == "Health") {
             
