@@ -16,7 +16,8 @@ library(shiny)
 library(shinythemes)
 
 task_groups <- c(
-    "Family"
+    "Ash"
+    ,"Family"
     ,"Health"
     ,"Finance"
     ,"Professional"
@@ -238,29 +239,33 @@ server <- function(input, output, session) {
 
     output$sub_subgroup <- renderUI({
         
-        if (input$sub_group == "Family") {
+        if (input$sub_group == "Ash") {
             
-            subgroup <- c("Logan", "Ash", "Family Time", "House", "Meals", "Walks", "Family Finance", "Improvements", "Other")
+            subgroup <- c("Reading")
+            
+        } else if (input$sub_group == "Family") {
+            
+            subgroup <- c("Logan", "Ash", "Family Time", "House", "Meals", "Walks", "Family Finance", "Improvements")
             
         } else if (input$sub_group == "Health") {
             
-            subgroup <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language", "Other")
+            subgroup <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language")
             
         } else if (input$sub_group == "Professional") {
             
-            subgroup <- c("Coursera", "Datacamp", "New Role Effort", "Personal Website", "Blog and Social Posts", "NFL GM Game Project", "Other Projects", "Work", "Other")
+            subgroup <- c("Coursera", "Datacamp", "New Role Effort", "Personal Website", "Blog and Social Posts", "NFL GM Game Project", "Other Projects", "Work")
             
         } else if (input$sub_group == "Skills") {
             
-            subgroup <- c("Room Decoration", "Garden Work", "Woodwork and Furniture", "Other")
+            subgroup <- c("Room Decoration", "Garden Work", "Woodwork and Furniture")
             
         } else if (input$sub_group == "Hobby") {
             
-            subgroup <- c("PC Construction", "Guitar Learning", "Piano Learning", "Guitar Construction", "Pedal Construction", "Other")
+            subgroup <- c("PC Construction", "Guitar Learning", "Piano Learning", "Guitar Construction", "Pedal Construction")
             
         } else if (input$sub_group == "Waste") {
             
-            subgroup <- c("Transit", "Social", "Gaming", "Other")
+            subgroup <- c("Transit", "Social", "Gaming")
             
         } else {
             
@@ -271,7 +276,7 @@ server <- function(input, output, session) {
         selectInput(
             "sub_subgroup",
             label = "SubGroup:",
-            choices = c(subgroup, ""),
+            choices = c(subgroup, "Other", ""),
             selected = "",
             multiple = F
         )
@@ -280,29 +285,33 @@ server <- function(input, output, session) {
     
     output$sub_subgroup2 <- renderUI({
         
-        if (input$sub_group2 == "Family") {
+        if (input$sub_group2 == "Ash") {
             
-            subgroup2 <- c("Logan", "Ash", "Family Time", "House", "Meals", "Walks", "Family Finance", "Improvements", "Other")
+            subgroup2 <- c("Reading")
+            
+        } else if (input$sub_group2 == "Family") {
+            
+            subgroup2 <- c("Logan", "Ash", "Family Time", "House", "Meals", "Walks", "Family Finance", "Improvements")
             
         } else if (input$sub_group2 == "Health") {
             
-            subgroup2 <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language", "Other")
+            subgroup2 <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language")
             
         } else if (input$sub_group2 == "Professional") {
             
-            subgroup2 <- c("Coursera", "Datacamp", "New Role Effort", "Personal Website", "Blog and Social Posts", "NFL GM Game Project", "Other Projects", "Work", "Other")
+            subgroup2 <- c("Coursera", "Datacamp", "New Role Effort", "Personal Website", "Blog and Social Posts", "NFL GM Game Project", "Other Projects", "Work")
             
         } else if (input$sub_group2 == "Skills") {
             
-            subgroup2 <- c("Room Decoration", "Garden Work", "Woodwork and Furniture", "Other")
+            subgroup2 <- c("Room Decoration", "Garden Work", "Woodwork and Furniture")
             
         } else if (input$sub_group2 == "Hobby") {
             
-            subgroup2 <- c("PC Construction", "Guitar Learning", "Piano Learning", "Guitar Construction", "Pedal Construction", "Other")
+            subgroup2 <- c("PC Construction", "Guitar Learning", "Piano Learning", "Guitar Construction", "Pedal Construction")
             
         } else if (input$sub_group2 == "Waste") {
             
-            subgroup2 <- c("Transit", "Social", "Gaming", "Other")
+            subgroup2 <- c("Transit", "Social", "Gaming")
             
         } else {
             
@@ -313,7 +322,7 @@ server <- function(input, output, session) {
         selectInput(
             "sub_subgroup2",
             label = "SubGroup:",
-            choices = c(subgroup2, ""),
+            choices = c(subgroup2, "Other", ""),
             selected = "",
             multiple = F
         )
