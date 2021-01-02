@@ -9,6 +9,7 @@ library(DBI)
 library(httr)
 library(rvest)
 library(jsonlite)
+library(RColorBrewer)
 library(AzureAuth)
 library(AzureKeyVault)
 library(DT)
@@ -29,11 +30,25 @@ task_groups <- c(
 
 conf <- config::get()
 
+theme_tsk <- function() {
+    
+    theme_minimal() +
+    theme(
+        panel.grid = element_blank()
+        ,axis.title = element_text(size = 14, face = "bold")
+        ,axis.text = element_text(size = 13)
+        ,legend.position = "none"
+    )
+    
+}
+
 ui <- navbarPage(
     
     "Time Tracker",
+    theme = shinytheme("simplex"),
+    collapsible = T,
+    
     tabPanel(
-        
         "Time Submission",
         fluidPage(
             
@@ -181,8 +196,50 @@ ui <- navbarPage(
                     )
                 )
             )
+            
         )
-        
+    ),
+    
+    tabPanel(
+        "Analysis"
+        ,fluidPage(
+            
+            sidebarLayout(
+                sidebarPanel(
+                    width = 2,
+                    hr(),
+                    tags$img(width = "100%", src = "clock.jpg"),
+                    hr(),
+                    selectInput(
+                        "ana_usr",
+                        label = "User:",
+                        choices = c("Jamie", "Ash"),
+                        selected = "Jamie",
+                        multiple = F
+                    ),
+                    hr()
+                ),
+                
+                mainPanel(
+                    width = 10,
+                    h2("Analyses", align = "center"),
+                    hr(),
+                    column(
+                        width = 4,
+                        h3("Task Counts", align = "center"),
+                        hr(),
+                        plotOutput("ana_total", height = 750)
+                    ),
+                    column(
+                        width = 4,
+                        h3("Task Time", align = "center"),
+                        hr(),
+                        plotOutput("ana_time", height = 750)
+                    )
+                )
+            )
+            
+        )
     )
     
 )
@@ -200,7 +257,16 @@ server <- function(input, output, session) {
         dat = dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
-        )
+        ) %>% 
+                mutate(
+                    StartTime = gsub("[[:punct:]]", "", StartTime)
+                    ,EndTime = gsub("[[:punct:]]", "", EndTime)
+                    ,StartTimestamp = paste0(TaskDate, " ", substr(StartTime, 1, 2), substr(StartTime, 3, 4), "00.000")
+                    ,StartTimestamp = as_datetime(StartTimestamp)
+                    ,EndTimestamp = paste0(TaskDate, " ", substr(EndTime, 1, 2), substr(EndTime, 3, 4), "00.000")
+                    ,EndTimestamp = as_datetime(EndTimestamp)
+                    ,TimeSpent = difftime(EndTimestamp, StartTimestamp, units = "mins")
+                )
         
     )
     
@@ -231,7 +297,16 @@ server <- function(input, output, session) {
         rv$dat <- dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
-        )
+        ) %>% 
+            mutate(
+                StartTime = gsub("[[:punct:]]", "", StartTime)
+                ,EndTime = gsub("[[:punct:]]", "", EndTime)
+                ,StartTimestamp = paste0(TaskDate, " ", substr(StartTime, 1, 2), substr(StartTime, 3, 4), "00.000")
+                ,StartTimestamp = as_datetime(StartTimestamp)
+                ,EndTimestamp = paste0(TaskDate, " ", substr(EndTime, 1, 2), substr(EndTime, 3, 4), "00.000")
+                ,EndTimestamp = as_datetime(EndTimestamp)
+                ,TimeSpent = difftime(EndTimestamp, StartTimestamp, units = "mins")
+            )
         
         dbDisconnect(con_tsk)
         
@@ -241,7 +316,7 @@ server <- function(input, output, session) {
         
         if (input$sub_group == "Ash") {
             
-            subgroup <- c("Reading")
+            subgroup <- c("CPD - Reading", "CPD - Podcasts", "CPD - Coursework", "Fitness - Yoga", "Fitness - Walking", "Fitness - Workouts", "Self-Care - Reading", "Self-Care - TV", "Self-Care - Podcasts", "Skills - Piano", "Skills - French", "Skills - Baking", "Skills - Knitting")
             
         } else if (input$sub_group == "Family") {
             
@@ -287,7 +362,7 @@ server <- function(input, output, session) {
         
         if (input$sub_group2 == "Ash") {
             
-            subgroup2 <- c("Reading")
+            subgroup2 <- c("CPD - Reading", "CPD - Podcasts", "CPD - Coursework", "Fitness - Yoga", "Fitness - Walking", "Fitness - Workouts", "Self-Care - Reading", "Self-Care - TV", "Self-Care - Podcasts", "Skills - Piano", "Skills - French", "Skills - Baking", "Skills - Knitting")
             
         } else if (input$sub_group2 == "Family") {
             
@@ -408,6 +483,216 @@ server <- function(input, output, session) {
                 )
             
         )
+        
+    })
+    
+    output$ana_total <- renderPlot({
+        
+        if (input$ana_usr == "Jamie") {
+            
+            maxcnt <- rv$dat %>% 
+                filter(
+                    TaskGroup != "Ash"
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = n()
+                )
+            maxcnt <- max(maxcnt$Count)
+            
+            rv$dat %>% 
+                filter(
+                    TaskGroup != "Ash"
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = n()
+                ) %>% 
+                mutate(
+                    Tasks = paste(sep = "\n", TaskGroup, TaskSubGroup)
+                ) %>% 
+                ggplot() +
+                geom_bar(aes(y = reorder(Tasks, Count), weight = Count, fill = TaskGroup, group = TaskGroup, alpha = Count), position = "dodge", color = "black") +
+                theme_tsk() +
+                labs(
+                    x = "Total Tasks"
+                    ,y = "Task"
+                ) +
+                scale_x_continuous(
+                    breaks = c(seq(0, 1000, 1))
+                    ,labels = c(seq(0, 1000, 1))
+                ) +
+                scale_fill_brewer(
+                    palette = "YlGnBu"
+                ) +
+                coord_cartesian(
+                    xlim = c(0, maxcnt)
+                )
+            
+        } else if (input$ana_usr == "Ash") {
+            
+            maxcnt <- rv$dat %>% 
+                filter(
+                    TaskGroup == "Ash"
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = n()
+                )
+            maxcnt <- max(maxcnt$Count)
+            
+            rv$dat %>% 
+                filter(
+                    TaskGroup == "Ash"
+                ) %>% 
+                mutate(
+                    Arc_Group = TaskSubGroup
+                    ,TaskGroup = sapply(X = TaskSubGroup, FUN = function(x) {str_split(x, " - ")[[1]][1]})
+                    ,TaskSubGroup = sapply(X = TaskSubGroup, FUN = function(x) {str_split(x, " - ")[[1]][2]})
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = n()
+                ) %>% 
+                mutate(
+                    Tasks = paste(sep = "\n", TaskGroup, TaskSubGroup)
+                ) %>% 
+                ggplot() +
+                geom_bar(aes(y = reorder(Tasks, Count), fill = TaskGroup, group = TaskGroup, alpha = Count), position = "dodge", color = "black") +
+                theme_tsk() +
+                labs(
+                    x = "Total Tasks"
+                    ,y = "Task"
+                ) +
+                scale_x_continuous(
+                    breaks = c(seq(0, 1000, 1))
+                    ,labels = c(seq(0, 1000, 1))
+                ) +
+                scale_fill_brewer(
+                    palette = "Spectral"
+                ) +
+                coord_cartesian(
+                    xlim = c(0, maxcnt)
+                )
+            
+        }
+        
+    })
+    
+    output$ana_time <- renderPlot({
+        
+        if (input$ana_usr == "Jamie") {
+            
+            maxcnt <- rv$dat %>% 
+                filter(
+                    TaskGroup != "Ash"
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = sum(TimeSpent, na.rm = T)
+                )
+            maxcnt <- max(maxcnt$Count)
+            
+            rv$dat %>% 
+                filter(
+                    TaskGroup != "Ash"
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = sum(TimeSpent, na.rm = T)
+                ) %>% 
+                mutate(
+                    Tasks = paste(sep = "\n", TaskGroup, TaskSubGroup)
+                ) %>% 
+                ggplot() +
+                geom_bar(aes(y = reorder(Tasks, Count), weight = Count, fill = TaskGroup, group = TaskGroup, alpha = Count), position = "dodge", color = "black") +
+                theme_tsk() +
+                labs(
+                    x = "Total Time (Minutes)"
+                    ,y = "Task"
+                ) +
+                scale_x_continuous(
+                    breaks = c(seq(0, 10000, 30))
+                    ,labels = c(seq(0, 10000, 30))
+                ) +
+                scale_fill_brewer(
+                    palette = "YlGnBu"
+                ) +
+                coord_cartesian(
+                    xlim = c(0, maxcnt)
+                )
+            
+        } else if (input$ana_usr == "Ash") {
+            
+            maxcnt <- rv$dat %>% 
+                filter(
+                    TaskGroup == "Ash"
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = sum(TimeSpent, na.rm = T)
+                )
+            maxcnt <- max(maxcnt$Count)
+            
+            rv$dat %>% 
+                filter(
+                    TaskGroup == "Ash"
+                ) %>% 
+                mutate(
+                    Arc_Group = TaskSubGroup
+                    ,TaskGroup = sapply(X = TaskSubGroup, FUN = function(x) {str_split(x, " - ")[[1]][1]})
+                    ,TaskSubGroup = sapply(X = TaskSubGroup, FUN = function(x) {str_split(x, " - ")[[1]][2]})
+                ) %>% 
+                group_by(
+                    TaskGroup
+                    ,TaskSubGroup
+                ) %>% 
+                summarise(
+                    Count = sum(TimeSpent, na.rm = T)
+                ) %>% 
+                mutate(
+                    Tasks = paste(sep = "\n", TaskGroup, TaskSubGroup)
+                ) %>% 
+                ggplot() +
+                geom_bar(aes(y = reorder(Tasks, Count), weight = Count, fill = TaskGroup, group = TaskGroup, alpha = Count), position = "dodge", color = "black") +
+                theme_tsk() +
+                labs(
+                    x = "Total Time (Minutes)"
+                    ,y = "Task"
+                ) +
+                scale_x_continuous(
+                    breaks = c(seq(0, 10000, 30))
+                    ,labels = c(seq(0, 10000, 30))
+                ) +
+                scale_fill_brewer(
+                    palette = "Spectral"
+                ) +
+                coord_cartesian(
+                    xlim = c(0, maxcnt)
+                )
+            
+        }
         
     })
     
