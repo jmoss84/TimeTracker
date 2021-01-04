@@ -324,7 +324,7 @@ server <- function(input, output, session) {
             
         } else if (input$sub_group == "Health") {
             
-            subgroup <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language")
+            subgroup <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language", "Social")
             
         } else if (input$sub_group == "Professional") {
             
@@ -362,7 +362,7 @@ server <- function(input, output, session) {
         
         if (input$sub_group2 == "Ash") {
             
-            subgroup2 <- c("CPD - Reading", "CPD - Podcasts", "CPD - Coursework", "Fitness - Yoga", "Fitness - Walking", "Fitness - Workouts", "Self-Care - Reading", "Self-Care - TV", "Self-Care - Podcasts", "Skills - Piano", "Skills - French", "Skills - Baking", "Skills - Knitting")
+            subgroup2 <- c("CPD - Reading", "CPD - Podcasts", "CPD - Coursework", "Fitness - Yoga", "Fitness - Walking", "Fitness - Workouts", "Self-Care - Reading", "Self-Care - TV", "Self-Care - Podcasts", "Self-Care - Social", "Skills - Piano", "Skills - French", "Skills - Baking", "Skills - Knitting")
             
         } else if (input$sub_group2 == "Family") {
             
@@ -370,7 +370,7 @@ server <- function(input, output, session) {
             
         } else if (input$sub_group2 == "Health") {
             
-            subgroup2 <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language")
+            subgroup2 <- c("Exercise", "Reading", "Audiobook", "Podcast", "Language", "Social")
             
         } else if (input$sub_group2 == "Professional") {
             
