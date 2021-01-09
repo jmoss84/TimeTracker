@@ -201,6 +201,127 @@ ui <- navbarPage(
     ),
     
     tabPanel(
+        "Movie Night",
+        fluidPage(
+            
+            sidebarLayout(
+                sidebarPanel(
+                    width = 2,
+                    hr(),
+                    tags$img(width = "100%", src = "clock.jpg"),
+                    hr()
+                ),
+                
+                mainPanel(
+                    column(
+                        width = 8,
+                        h2("Movie Data", align = "center"),
+                        hr(),
+                        h3("Enter Movies", align = "center"),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                dateInput(
+                                    "mov_date",
+                                    label = "Activity date:",
+                                    value = today(),
+                                    weekstart = 1
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                textInput(
+                                    "mov_start",
+                                    label = "Start Time:"
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                textInput(
+                                    "mov_end",
+                                    label = "End Time:"
+                                )
+                            )
+                        ),
+                        fluidRow(
+                            column(
+                                width = 6,
+                                textInput(
+                                    "mov_name",
+                                    label = "Movie Name:",
+                                    value = ""
+                                )
+                            ),
+                            column(
+                                width = 6,
+                                selectInput(
+                                    "mov_genre",
+                                    label = "Movie Genre:",
+                                    choices = c("Action", "Thriller", "Comedy", "RomCom", "Classic", "Horror", "Animated", "Drama", "Other", ""),
+                                    selected = "",
+                                    multiple = F
+                                )
+                            )
+                        ),
+                        fluidRow(
+                            column(
+                                width = 6,
+                                numericInput(
+                                    "mov_ashscore",
+                                    label = "Ash's Score",
+                                    value = 5,
+                                    min = 0,
+                                    max = 10,
+                                    step = 0.1
+                                )
+                            ),
+                            column(
+                                width = 6,
+                                numericInput(
+                                    "mov_jamscore",
+                                    label = "Jamie's Score",
+                                    value = 5,
+                                    min = 0,
+                                    max = 10,
+                                    step = 0.1
+                                )
+                            )
+                        ),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                actionButton(
+                                    "mov_go_movie",
+                                    label = "Submit Movie",
+                                    icon = icon("check")
+                                )
+                            ),
+                            column(
+                                width = 4
+                            ),
+                            column(
+                                width = 4
+                            )
+                        )
+                    ),
+                    column(
+                        width = 4,
+                        column(
+                            width = 12,
+                            h2("Movie Table", align = "center"),
+                            hr(),
+                            dataTableOutput("mov_tbl_tasks")
+                        )
+                    )
+                )
+            )
+            
+        )
+    ),
+    
+    tabPanel(
         "Analysis"
         ,fluidPage(
             
@@ -254,7 +375,7 @@ server <- function(input, output, session) {
     
     rv <- reactiveValues(
         
-        dat = dbGetQuery(
+        dat_tsk = dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
         ) %>% 
@@ -266,7 +387,12 @@ server <- function(input, output, session) {
                     ,EndTimestamp = paste0(TaskDate, " ", substr(EndTime, 1, 2), substr(EndTime, 3, 4), "00.000")
                     ,EndTimestamp = as_datetime(EndTimestamp)
                     ,TimeSpent = difftime(EndTimestamp, StartTimestamp, units = "mins")
-                )
+                ),
+        
+        dat_mov = dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Movies;"
+        )
         
     )
     
@@ -288,13 +414,20 @@ server <- function(input, output, session) {
         updateSelectInput(session, "sub_subgroup2", selected = "")
         updateTextInput(session, "sub_notes2", value = "")
         
+        updateDateInput(session, "mov_date", value = today())
+        updateTextInput(session, "mov_start", value = "")
+        updateTextInput(session, "mov_end", value = "")
+        updateSelectInput(session, "mov_genre", value = "")
+        updateNumericInput(session, "mov_ashscore", value = 5)
+        updateNumericInput(session, "mov_jamscore", value = 5)
+        
         con_tsk <- dbConnect(
             odbc::odbc(),
             .connection_string = conf$con_str,
             timeout = 5
         )
         
-        rv$dat <- dbGetQuery(
+        rv$dat_tsk <- dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
         ) %>% 
@@ -307,6 +440,11 @@ server <- function(input, output, session) {
                 ,EndTimestamp = as_datetime(EndTimestamp)
                 ,TimeSpent = difftime(EndTimestamp, StartTimestamp, units = "mins")
             )
+        
+        rv$dat_mov <- dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Movies;"
+        )
         
         dbDisconnect(con_tsk)
         
@@ -442,7 +580,7 @@ server <- function(input, output, session) {
             
             dbAppendTable(
                 conn = con_tsk,
-                name = SQL(conf$table),
+                name = SQL(conf$tables$Tasks),
                 value = data2
             )
             
@@ -458,7 +596,7 @@ server <- function(input, output, session) {
         
         dbAppendTable(
             conn = con_tsk,
-            name = SQL(conf$table),
+            name = SQL(conf$tables$Tasks),
             value = data
         )
         
@@ -473,7 +611,7 @@ server <- function(input, output, session) {
             options = list(pageLength = 8, scrollX = T),
             rownames = F,
             
-            rv$dat %>% 
+            rv$dat_tsk %>% 
                 select(
                     -ID
                     ,-TaskLevel
@@ -486,11 +624,52 @@ server <- function(input, output, session) {
         
     })
     
+    observeEvent(input$mov_go_movie, {
+        
+        data <- data.frame(
+            MovieName = input$mov_name
+            ,WatchDate = input$mov_date
+            ,StartTime = input$mov_start
+            ,EndTime = input$mov_end
+            ,Genre = input$mov_genre
+            ,AshScore = input$mov_ashscore
+            ,JamScore = input$mov_jamscore
+        )
+        
+        validate <- (
+            !is.na(input$mov_name)
+            & !is.na(input$mov_genre)
+            & input$mov_name != ""
+            & input$mov_genre != ""
+        )
+        
+        if (validate == T) {
+            
+            con_tsk <- dbConnect(
+                odbc::odbc(),
+                .connection_string = conf$con_str,
+                timeout = 5
+            )
+            
+            dbAppendTable(
+                conn = con_tsk,
+                name = SQL(conf$tables$movies),
+                value = data
+            )
+            
+            dbDisconnect(con_tsk)
+            
+            refresh()
+            
+        }
+        
+    })
+    
     output$ana_total <- renderPlot({
         
         if (input$ana_usr == "Jamie") {
             
-            maxcnt <- rv$dat %>% 
+            maxcnt <- rv$dat_tsk %>% 
                 filter(
                     TaskGroup != "Ash"
                 ) %>% 
@@ -503,7 +682,7 @@ server <- function(input, output, session) {
                 )
             maxcnt <- max(maxcnt$Count)
             
-            rv$dat %>% 
+            rv$dat_tsk %>% 
                 filter(
                     TaskGroup != "Ash"
                 ) %>% 
@@ -537,7 +716,7 @@ server <- function(input, output, session) {
             
         } else if (input$ana_usr == "Ash") {
             
-            maxcnt <- rv$dat %>% 
+            maxcnt <- rv$dat_tsk %>% 
                 filter(
                     TaskGroup == "Ash"
                 ) %>% 
@@ -550,7 +729,7 @@ server <- function(input, output, session) {
                 )
             maxcnt <- max(maxcnt$Count)
             
-            rv$dat %>% 
+            rv$dat_tsk %>% 
                 filter(
                     TaskGroup == "Ash"
                 ) %>% 
@@ -595,7 +774,7 @@ server <- function(input, output, session) {
         
         if (input$ana_usr == "Jamie") {
             
-            maxcnt <- rv$dat %>% 
+            maxcnt <- rv$dat_tsk %>% 
                 filter(
                     TaskGroup != "Ash"
                 ) %>% 
@@ -608,7 +787,7 @@ server <- function(input, output, session) {
                 )
             maxcnt <- max(maxcnt$Count)
             
-            rv$dat %>% 
+            rv$dat_tsk %>% 
                 filter(
                     TaskGroup != "Ash"
                 ) %>% 
@@ -642,7 +821,7 @@ server <- function(input, output, session) {
             
         } else if (input$ana_usr == "Ash") {
             
-            maxcnt <- rv$dat %>% 
+            maxcnt <- rv$dat_tsk %>% 
                 filter(
                     TaskGroup == "Ash"
                 ) %>% 
@@ -655,7 +834,7 @@ server <- function(input, output, session) {
                 )
             maxcnt <- max(maxcnt$Count)
             
-            rv$dat %>% 
+            rv$dat_tsk %>% 
                 filter(
                     TaskGroup == "Ash"
                 ) %>% 
