@@ -401,7 +401,7 @@ ui <- navbarPage(
                             column(
                                 width = 4,
                                 actionButton(
-                                    "cok_go_cook",
+                                    "cok_go_meals",
                                     label = "Submit Meal",
                                     icon = icon("check")
                                 )
@@ -789,7 +789,10 @@ server <- function(input, output, session) {
             ,StartTime = input$cok_start
             ,EndTime = input$cok_end
             ,Score = input$cok_score
-        )
+        ) %>% 
+            mutate(
+                SessionUser = ifelse(conf$env == "shinyapps", session$user, NA)
+            )
         
         validate <- (
             !is.na(input$cok_name)
