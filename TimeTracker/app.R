@@ -789,10 +789,7 @@ server <- function(input, output, session) {
             ,StartTime = input$cok_start
             ,EndTime = input$cok_end
             ,Score = input$cok_score
-        ) %>% 
-            mutate(
-                SessionUser = ifelse(conf$env == "shinyapps", session$user, NA)
-            )
+        )
         
         validate <- (
             !is.na(input$cok_name)
