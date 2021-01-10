@@ -312,7 +312,115 @@ ui <- navbarPage(
                             width = 12,
                             h2("Movie Table", align = "center"),
                             hr(),
-                            dataTableOutput("mov_tbl_tasks")
+                            dataTableOutput("mov_tbl_movies")
+                        )
+                    )
+                )
+            )
+            
+        )
+    ),
+    
+    tabPanel(
+        "Cooking",
+        fluidPage(
+            
+            sidebarLayout(
+                sidebarPanel(
+                    width = 2,
+                    hr(),
+                    tags$img(width = "100%", src = "clock.jpg"),
+                    hr()
+                ),
+                
+                mainPanel(
+                    column(
+                        width = 8,
+                        h2("Cooking Data", align = "center"),
+                        hr(),
+                        h3("Enter Meals", align = "center"),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                dateInput(
+                                    "cok_date",
+                                    label = "Activity date:",
+                                    value = today(),
+                                    weekstart = 1
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                textInput(
+                                    "cok_start",
+                                    label = "Start Time:"
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                textInput(
+                                    "cok_end",
+                                    label = "End Time:"
+                                )
+                            )
+                        ),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                textInput(
+                                    "cok_name",
+                                    label = "Meal Name:",
+                                    value = ""
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                selectInput(
+                                    "cok_book",
+                                    label = "Recipe Book:",
+                                    choices = c("Jamie Recipe", "Gino's Pasta", "Nick Naird Scottish Cookery", "What Mummy Makes", "Other", ""),
+                                    selected = "",
+                                    multiple = F
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                numericInput(
+                                    "cok_score",
+                                    label = "Score",
+                                    value = 5,
+                                    min = 0,
+                                    max = 10,
+                                    step = 0.1
+                                )
+                            )
+                        ),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                actionButton(
+                                    "cok_go_cook",
+                                    label = "Submit Meal",
+                                    icon = icon("check")
+                                )
+                            ),
+                            column(
+                                width = 4
+                            ),
+                            column(
+                                width = 4
+                            )
+                        )
+                    ),
+                    column(
+                        width = 4,
+                        column(
+                            width = 12,
+                            h2("Meal Table", align = "center"),
+                            hr(),
+                            dataTableOutput("cok_tbl_meals")
                         )
                     )
                 )
@@ -417,9 +525,16 @@ server <- function(input, output, session) {
         updateDateInput(session, "mov_date", value = today())
         updateTextInput(session, "mov_start", value = "")
         updateTextInput(session, "mov_end", value = "")
-        updateSelectInput(session, "mov_genre", value = "")
+        updateSelectInput(session, "mov_genre", selected = "")
         updateNumericInput(session, "mov_ashscore", value = 5)
         updateNumericInput(session, "mov_jamscore", value = 5)
+        
+        updateDateInput(session, "cok_date", value = today())
+        updateTextInput(session, "cok_start", value = "")
+        updateTextInput(session, "cok_end", value = "")
+        updateTextInput(session, "cok_name", value = "")
+        updateSelectInput(session, "cok_book", selected = "")
+        updateNumericInput(session, "cok_score", value = 5)
         
         con_tsk <- dbConnect(
             odbc::odbc(),
@@ -580,7 +695,7 @@ server <- function(input, output, session) {
             
             dbAppendTable(
                 conn = con_tsk,
-                name = SQL(conf$tables$Tasks),
+                name = SQL(conf$tables$tasks),
                 value = data2
             )
             
@@ -596,7 +711,7 @@ server <- function(input, output, session) {
         
         dbAppendTable(
             conn = con_tsk,
-            name = SQL(conf$tables$Tasks),
+            name = SQL(conf$tables$tasks),
             value = data
         )
         
@@ -654,6 +769,46 @@ server <- function(input, output, session) {
             dbAppendTable(
                 conn = con_tsk,
                 name = SQL(conf$tables$movies),
+                value = data
+            )
+            
+            dbDisconnect(con_tsk)
+            
+            refresh()
+            
+        }
+        
+    })
+    
+    observeEvent(input$cok_go_meals, {
+        
+        data <- data.frame(
+            MealName = input$cok_name
+            ,MealDate = input$cok_date
+            ,RecipeSource = input$cok_book
+            ,StartTime = input$cok_start
+            ,EndTime = input$cok_end
+            ,Score = input$cok_score
+        )
+        
+        validate <- (
+            !is.na(input$cok_name)
+            & !is.na(input$cok_book)
+            & input$cok_name != ""
+            & input$cok_book != ""
+        )
+        
+        if (validate == T) {
+            
+            con_tsk <- dbConnect(
+                odbc::odbc(),
+                .connection_string = conf$con_str,
+                timeout = 5
+            )
+            
+            dbAppendTable(
+                conn = con_tsk,
+                name = SQL(conf$tables$meals),
                 value = data
             )
             
