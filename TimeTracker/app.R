@@ -883,82 +883,80 @@ server <- function(input, output, session) {
     
     output$ana_grps <- renderPlot({
         
-        #grps <- rv$dat_tsk %>% 
-        #    filter(
-        #        TaskGroup != "Ash"
-        #    ) %>% 
-        #    group_by(
-        #        TaskGroup
-        #    ) %>% 
-        #    summarise(
-        #        Count = sum(TimeSpent, na.rm = T)
-        #    )
-        #maxcnt <- max(grps$Count)
-        #
-        #grps %>% 
-        #    ggplot() +
-        #    geom_bar(aes(y = reorder(TaskGroup, Count), weight = Count, fill = TaskGroup, group = TaskGroup, alpha = Count), position = "dodge", color = "black") +
-        #    theme_tsk() +
-        #    labs(
-        #        x = "Total Tasks"
-        #        ,y = "Task"
-        #    ) +
-        #    scale_fill_manual(
-        #        values = c(
-        #            "Family" = "#FFFCF2"
-        #            ,"Health" = "#CCC5B9"
-        #            ,"Finance" = "#403D39"
-        #            ,"Professional" = "#252422"
-        #            ,"Skills" = "#EB5E28"
-        #            ,"Hobby" = "#F7AEF8"
-        #            ,"Waste" = "#B388EB"
-        #            ,"" = "#FFFFFF"
-        #        )
-        #    ) +
-        #    coord_cartesian(
-        #        xlim = c(0, maxcnt)
-        #    )
+        grps <- rv$dat_tsk %>% 
+            filter(
+                TaskGroup != "Ash"
+            ) %>% 
+            group_by(
+                TaskGroup
+            ) %>% 
+            summarise(
+                Count = sum(TimeSpent, na.rm = T)
+            )
+        maxcnt <- max(grps$Count, na.rm = T)
+        
+        grps %>% 
+            ggplot() +
+            geom_bar(aes(y = reorder(TaskGroup, Count), weight = Count, fill = TaskGroup, group = TaskGroup), position = "dodge", color = "black") +
+            theme_tsk() +
+            labs(
+                x = "Total Tasks"
+                ,y = ""
+            ) +
+            scale_fill_manual(
+                values = c(
+                    "Family" = "#FFFCF2"
+                    ,"Health" = "#CCC5B9"
+                    ,"Finance" = "#403D39"
+                    ,"Professional" = "#252422"
+                    ,"Skills" = "#EB5E28"
+                    ,"Hobby" = "#F7AEF8"
+                    ,"Waste" = "#B388EB"
+                )
+            ) +
+            coord_cartesian(
+                xlim = c(0, maxcnt)
+            )
         
     })
     
     output$ana_subs <- renderPlot({
         
-        #subs <- rv$dat_tsk %>% 
-        #    filter(
-        #        TaskGroup != "Ash"
-        #    ) %>% 
-        #    group_by(
-        #        TaskGroup
-        #        ,TaskSubGroup
-        #    ) %>% 
-        #    summarise(
-        #        Count = sum(TimeSpent, na.rm = T)
-        #    )
-        #maxcnt <- max(subs$Count)
-        #
-        #subs %>% 
-        #    ggplot() +
-        #    geom_bar(aes(y = reorder(TaskSubGroup, Count), weight = Count, fill = TaskGroup, group = TaskGroup, alpha = Count), position = "dodge", color = "black") +
-        #    theme_tsk() +
-        #    labs(
-        #        x = "Total Time (Minutes)"
-        #        ,y = ""
-        #    ) +
-        #    scale_fill_manual(
-        #        values = c(
-        #            "Family" = "#FFFCF2"
-        #            ,"Health" = "#CCC5B9"
-        #            ,"Finance" = "#403D39"
-        #            ,"Professional" = "#252422"
-        #            ,"Skills" = "#EB5E28"
-        #            ,"Hobby" = "#F7AEF8"
-        #            ,"Waste" = "#B388EB"
-        #            ,"" = "#FFFFFF"
-        #        )
-        #    ) +
-        #    coord_cartesian(
-        #        xlim = c(0, maxcnt)
-        #    )
+        subs <- rv$dat_tsk %>% 
+            filter(
+                TaskGroup != "Ash"
+            ) %>% 
+            group_by(
+                TaskGroup
+                ,TaskSubGroup
+            ) %>% 
+            summarise(
+                Count = sum(TimeSpent, na.rm = T)
+            )
+        maxcnt <- max(subs$Count)
+        
+        subs %>% 
+            ggplot() +
+            geom_bar(aes(y = reorder(TaskSubGroup, Count), weight = Count, fill = TaskGroup, group = TaskGroup), position = "dodge", color = "black") +
+            theme_tsk() +
+            labs(
+                x = "Total Time (Minutes)"
+                ,y = ""
+            ) +
+            scale_fill_manual(
+                values = c(
+                    "Family" = "#FFFCF2"
+                    ,"Health" = "#CCC5B9"
+                    ,"Finance" = "#403D39"
+                    ,"Professional" = "#252422"
+                    ,"Skills" = "#EB5E28"
+                    ,"Hobby" = "#F7AEF8"
+                    ,"Waste" = "#B388EB"
+                )
+            ) +
+            coord_cartesian(
+                xlim = c(0, maxcnt)
+            )
         
     })
     
