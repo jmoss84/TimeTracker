@@ -429,43 +429,66 @@ ui <- navbarPage(
         )
     ),
     
-    tabPanel(
-        "Analysis"
-        ,fluidPage(
+    navbarMenu(
+        
+        "Analysis",
+        
+        tabPanel(
             
-            sidebarLayout(
-                sidebarPanel(
-                    width = 2,
-                    hr(),
-                    tags$img(width = "100%", src = "clock.jpg"),
-                    hr(),
-                    selectInput(
-                        "ana_usr",
-                        label = "User:",
-                        choices = c("Jamie", "Ash"),
-                        selected = "Jamie",
-                        multiple = F
-                    ),
-                    hr()
-                ),
+            "Tasks",
+            fluidPage(
                 
-                mainPanel(
-                    width = 10,
-                    h2("Analyses", align = "center"),
-                    hr(),
-                    column(
-                        width = 4,
-                        h3("Task Counts", align = "center"),
+                sidebarLayout(
+                    sidebarPanel(
+                        width = 2,
                         hr(),
-                        plotOutput("ana_total", height = 750)
+                        tags$img(width = "100%", src = "clock.jpg"),
+                        hr(),
+                        selectInput(
+                            "ana_usr",
+                            label = "User:",
+                            choices = c("Jamie", "Ash"),
+                            selected = "Jamie",
+                            multiple = F
+                        ),
+                        hr()
                     ),
-                    column(
-                        width = 4,
-                        h3("Task Time", align = "center"),
+                    
+                    mainPanel(
+                        width = 10,
+                        h2("Analyses", align = "center"),
                         hr(),
-                        plotOutput("ana_time", height = 750)
+                        column(
+                            width = 4,
+                            h3("Task Counts", align = "center"),
+                            hr(),
+                            plotOutput("ana_total", height = 750)
+                        ),
+                        column(
+                            width = 4,
+                            h3("Task Time", align = "center"),
+                            hr(),
+                            plotOutput("ana_time", height = 750)
+                        )
                     )
                 )
+            )
+        ),
+        
+        tabPanel(
+            
+            "Movies",
+            fluidPage(
+                
+            )
+            
+        ),
+        
+        tabPanel(
+            
+            "Cooking",
+            fluidPage(
+                
             )
             
         )
@@ -500,6 +523,11 @@ server <- function(input, output, session) {
         dat_mov = dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Movies;"
+        ),
+        
+        dat_cok = dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Meals;"
         )
         
     )
@@ -559,6 +587,11 @@ server <- function(input, output, session) {
         rv$dat_mov <- dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Movies;"
+        )
+        
+        rv$dat_cok <- dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Meals;"
         )
         
         dbDisconnect(con_tsk)
@@ -780,6 +813,24 @@ server <- function(input, output, session) {
         
     })
     
+    output$mov_tbl_movies <- renderDataTable({
+        
+        DT::datatable(
+            options = list(pageLength = 8, scrollX = T),
+            rownames = F,
+            
+            rv$dat_mov %>% 
+                select(
+                    -ID
+                ) %>% 
+                arrange(
+                    desc(ImportTimestamp)
+                )
+            
+        )
+        
+    })
+    
     observeEvent(input$cok_go_meals, {
         
         data <- data.frame(
@@ -817,6 +868,24 @@ server <- function(input, output, session) {
             refresh()
             
         }
+        
+    })
+    
+    output$cok_tbl_meals <- renderDataTable({
+        
+        DT::datatable(
+            options = list(pageLength = 8, scrollX = T),
+            rownames = F,
+            
+            rv$dat_cok %>% 
+                select(
+                    -ID
+                ) %>% 
+                arrange(
+                    desc(ImportTimestamp)
+                )
+            
+        )
         
     })
     
