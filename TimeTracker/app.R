@@ -477,6 +477,36 @@ ui <- navbarPage(
             "Cooking",
             fluidPage(
                 
+                sidebarLayout(
+                    sidebarPanel(
+                        width = 2,
+                        hr(),
+                        tags$img(width = "100%", src = "clock.jpg"),
+                        hr()
+                    ),
+                    
+                    mainPanel(
+                        width = 10,
+                        h2("Analyses", align = "center"),
+                        hr(),
+                        column(
+                            width = 4,
+                            h3("Meals Per Week", align = "center"),
+                            plotOutput("tska_meals", height = 150),
+                            hr()
+                        ),
+                        column(
+                            width = 8,
+                            h3("Meal Quality", align = "center"),
+                            plotOutput("tska_mealscore", height = 300),
+                            hr(),
+                            h3("Prep Time", align = "center"),
+                            plotOutput("tska_mealtime", height = 300),
+                            hr()
+                        )
+                    )
+                )
+                
             )
             
         )
@@ -956,6 +986,78 @@ server <- function(input, output, session) {
             ) +
             coord_cartesian(
                 xlim = c(0, maxcnt)
+            )
+        
+    })
+    
+    output$tska_meals <- renderPlot({
+        
+        weeks <- isoweek(today())
+        
+        rv$dat_cok %>% 
+            group_by(
+                1
+            ) %>% 
+            summarise(
+                Count = n()
+            ) %>% 
+            mutate(
+                MealsPerWeek = Count / weeks
+                ,MealsPerWeekTarget = 3
+                ,OnTarget = MealsPerWeek >= MealsPerWeekTarget
+            ) %>% 
+            ggplot() +
+            geom_text(aes(x = 1, y = 1, label = round(MealsPerWeek, 1), color = OnTarget), size = 24) +
+            theme_tsk() +
+            theme(
+                axis.title = element_blank()
+                ,axis.text = element_blank()
+            ) +
+            scale_color_manual(
+                values = c(
+                    "TRUE" = "cyan"
+                    ,"FALSE" = "firebrick"
+                )
+            ) +
+            coord_cartesian(ylim = c(0.5, 1.5))
+        
+    })
+    
+    output$tska_mealscore <- renderPlot({
+        
+        rv$dat_cok %>% 
+            ggplot(aes(x = as_date(MealDate), y = Score)) +
+            geom_line(aes(group = 1), color = "cyan") +
+            geom_point(color = "black", size = 5) +
+            geom_point(color = "cyan", size = 4) +
+            theme_tsk() +
+            labs(
+                x = "Meal Date"
+                ,y = "Score"
+            ) +
+            scale_y_continuous(
+                breaks = c(seq(0, 10, 1))
+            )
+        
+    })
+    
+    output$tska_mealtime <- renderPlot({
+        
+        rv$dat_cok %>% 
+            mutate(
+                Start = as_datetime(paste0(MealDate, " ", substr(StartTime, 1, 2), ":", substr(StartTime, 3, 4), ":00.000"))
+                ,End = as_datetime(paste0(MealDate, " ", substr(EndTime, 1, 2), ":", substr(EndTime, 3, 4), ":00.000"))
+                ,Time = difftime(End, Start, units = "mins")
+            ) %>% 
+            ggplot(aes(x = as_date(MealDate), y = Time)) +
+            geom_line(aes(group = 1), color = "navy") +
+            geom_point(color = "black", size = 5) +
+            geom_point(color = "navy", size = 4) +
+            geom_text(aes(y = Time + 10, label = Time)) +
+            theme_tsk() +
+            labs(
+                x = "Meal Date"
+                ,y = "Prep Time"
             )
         
     })
