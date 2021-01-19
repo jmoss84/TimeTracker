@@ -491,8 +491,14 @@ ui <- navbarPage(
                         hr(),
                         column(
                             width = 4,
+                            h3("Average Meal Score", align = "center"),
+                            plotOutput("tska_avgscore", height = 150),
+                            hr(),
                             h3("Meals Per Week", align = "center"),
                             plotOutput("tska_meals", height = 150),
+                            hr(),
+                            h3("Average Mealtime", align = "center"),
+                            plotOutput("tska_avgprep", height = 150),
                             hr()
                         ),
                         column(
@@ -1015,9 +1021,54 @@ server <- function(input, output, session) {
             ) +
             scale_color_manual(
                 values = c(
-                    "TRUE" = "cyan"
-                    ,"FALSE" = "firebrick"
+                    "TRUE" = "dodgerblue"
+                    ,"FALSE" = "grey50"
                 )
+            ) +
+            coord_cartesian(ylim = c(0.5, 1.5))
+        
+    })
+    
+    output$tska_avgprep <- renderPlot({
+        
+        rv$dat_cok %>% 
+            mutate(
+                Start = as_datetime(paste0(MealDate, " ", substr(StartTime, 1, 2), ":", substr(StartTime, 3, 4), ":00.000"))
+                ,End = as_datetime(paste0(MealDate, " ", substr(EndTime, 1, 2), ":", substr(EndTime, 3, 4), ":00.000"))
+                ,Time = difftime(End, Start, units = "mins")
+            ) %>% 
+            group_by(
+                1
+            ) %>% 
+            summarise(
+                Time = mean(Time, na.rm = T)
+            ) %>% 
+            ggplot() +
+            geom_text(aes(x = 1, y = 1, label = paste0(round(Time, 0), " mins")), color = "dodgerblue", size = 24) +
+            theme_tsk() +
+            theme(
+                axis.title = element_blank()
+                ,axis.text = element_blank()
+            ) +
+            coord_cartesian(ylim = c(0.5, 1.5))
+        
+    })
+    
+    output$tska_avgscore <- renderPlot({
+        
+        rv$dat_cok %>% 
+            group_by(
+                1
+            ) %>% 
+            summarise(
+                Score = mean(Score, na.rm = T)
+            ) %>% 
+            ggplot() +
+            geom_text(aes(x = 1, y = 1, label = round(Score, 1)), color = "dodgerblue", size = 24) +
+            theme_tsk() +
+            theme(
+                axis.title = element_blank()
+                ,axis.text = element_blank()
             ) +
             coord_cartesian(ylim = c(0.5, 1.5))
         
@@ -1053,7 +1104,6 @@ server <- function(input, output, session) {
             geom_line(aes(group = 1), color = "navy") +
             geom_point(color = "black", size = 5) +
             geom_point(color = "navy", size = 4) +
-            geom_text(aes(y = Time + 10, label = Time)) +
             theme_tsk() +
             labs(
                 x = "Meal Date"
