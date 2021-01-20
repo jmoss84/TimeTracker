@@ -602,25 +602,24 @@ ui <- navbarPage(
                         fluidRow(
                             column(
                                 width = 12,
-                                plotOutput("tska_bookscomp", height = 100),
+                                plotOutput("tska_bookscomp", height = 125),
                                 hr()
                             )
                         ),
                         fluidRow(
                             column(
                                 width = 4,
-                                h3("Average Book Score", align = "center"),
-                                hr(),
                                 h3("Books Per Month", align = "center"),
+                                plotOutput("tska_bookspermonth", height = 275),
                                 hr(),
-                                h3("Average Completion Time", align = "center"),
+                                h3("Books By Genre", align = "center"),
+                                plotOutput("tska_bookgenres", height = 360),
                                 hr()
                             ),
                             column(
                                 width = 8,
-                                h3("Book Quality", align = "center"),
-                                hr(),
-                                h3("Book Time", align = "center"),
+                                h3("All Scores", align = "center"),
+                                plotOutput("tska_bookscores", height = 700),
                                 hr()
                             )
                         )
@@ -1362,7 +1361,9 @@ server <- function(input, output, session) {
             geom_point(aes(y = Lane, size = BookScore, color = BookType), alpha = 0.5) +
             theme_tsk() +
             theme(
-                axis.title.y = element_blank()
+                panel.grid.major.x = element_line(size = 0.8, color = "grey85")
+                ,axis.title.y = element_blank()
+                ,axis.text.x = element_text(margin = margin(b = 5, t = 5))
                 ,axis.text.y = element_blank()
             ) +
             labs(
@@ -1383,6 +1384,113 @@ server <- function(input, output, session) {
             ) +
             coord_cartesian(
                 ylim = c(0.5, 2.5)
+            )
+        
+    })
+    
+    output$tska_bookspermonth <- renderPlot({
+        
+        months <- month(today())
+        
+        rv$dat_bok %>% 
+            group_by(
+                BookType
+            ) %>% 
+            summarise(
+                Count = n()
+            ) %>% 
+            mutate(
+                BooksPerMonth = Count / months
+                ,BooksPerMonthTarget = 2
+                ,OnTarget = BooksPerMonth >= BooksPerMonthTarget
+            ) %>% 
+            ggplot() +
+            geom_text(aes(x = 1, y = 1, label = paste0(BookType, "\n", round(BooksPerMonth, 1)), color = OnTarget), size = 18) +
+            theme_tsk() +
+            theme(
+                axis.title = element_blank()
+                ,axis.text = element_blank()
+                ,strip.text = element_blank()
+                ,strip.background = element_blank()
+            ) +
+            scale_color_manual(
+                values = c(
+                    "TRUE" = "darkorange1"
+                    ,"FALSE" = "grey50"
+                )
+            ) +
+            coord_cartesian(ylim = c(0.25, 1.75)) +
+            facet_grid(BookType~.)
+        
+    })
+    
+    output$tska_bookscores <- renderPlot({
+        
+        means <- rv$dat_bok %>% 
+            group_by(
+                BookType
+            ) %>% 
+            summarise(
+                Mean = mean(BookScore, na.rm = T)
+            )
+        
+        rv$dat_bok %>% 
+            ggplot() +
+            geom_hline(data = means, aes(yintercept = Mean), linetype = "dotted", color = "black", size = 1) +
+            geom_jitter(aes(x = BookType, y = BookScore, color = BookType), width = 0.2, size = 2.5) +
+            theme_tsk() +
+            theme(
+                panel.grid.major.y = element_line(size = 0.8, linetype = "dotted", color = "grey85")
+                ,axis.title.x = element_blank()
+                ,axis.text.x = element_text(size = 14, face = "bold")
+                ,strip.text = element_blank()
+            ) +
+            labs(
+                y = "Score"
+            ) +
+            scale_y_continuous(
+                breaks = c(seq(0, 10, 1))
+            ) +
+            scale_color_manual(
+                values = c(
+                    "Audiobook" = "darkorange1"
+                    ,"Book" = "tomato"
+                )
+            ) +
+            coord_cartesian(
+                ylim = c(0, 10)
+            ) +
+            facet_grid(.~BookType, scales = "free_x")
+        
+    })
+    
+    output$tska_bookgenres <- renderPlot({
+        
+        rv$dat_bok %>% 
+            group_by(
+                BookGenre
+            ) %>% 
+            summarise(
+                Count = n()
+            ) %>% 
+            ggplot() +
+            geom_bar(aes(y = BookGenre, weight = Count, fill = Count), color = "white", width = 0.4) +
+            theme_tsk() +
+            theme(
+                axis.title.y = element_blank()
+                ,axis.text.y = element_text(size = 14, margin = margin(r = -20))
+            ) +
+            labs(
+                x = "Books"
+            ) +
+            scale_x_continuous(
+                breaks = c(seq(0, 100, 1))
+            ) +
+            scale_y_discrete(
+                labels = function(x) {str_wrap(x, width = 10)}
+            ) +
+            scale_fill_gradient(
+                low = "tomato", high = "darkorange"
             )
         
     })
