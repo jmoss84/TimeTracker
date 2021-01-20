@@ -570,13 +570,22 @@ ui <- navbarPage(
                             width = 4,
                             h3("Task Groups", align = "center"),
                             hr(),
-                            plotOutput("ana_grps", height = 750)
+                            plotOutput("ana_grps", height = 750),
+                            hr()
                         ),
                         column(
                             width = 4,
                             h3("Task Sub Groups", align = "center"),
                             hr(),
-                            plotOutput("ana_subs", height = 750)
+                            plotOutput("ana_subs", height = 750),
+                            hr()
+                        ),
+                        column(
+                            width = 4,
+                            h3("Daily Outlook", align = "center"),
+                            hr(),
+                            plotOutput("ana_daily", height = 750),
+                            hr()
                         )
                     )
                 )
@@ -610,10 +619,10 @@ ui <- navbarPage(
                             column(
                                 width = 4,
                                 h3("Books Per Month", align = "center"),
-                                plotOutput("tska_bookspermonth", height = 275),
+                                plotOutput("tska_bookspermonth", height = 225),
                                 hr(),
                                 h3("Books By Genre", align = "center"),
-                                plotOutput("tska_bookgenres", height = 360),
+                                plotOutput("tska_bookgenres", height = 400),
                                 hr()
                             ),
                             column(
@@ -1179,7 +1188,7 @@ server <- function(input, output, session) {
             ) +
             scale_fill_manual(
                 values = c(
-                    "Family" = "#FFFCF2"
+                    "Family" = "#A8B333"
                     ,"Health" = "#CCC5B9"
                     ,"Finance" = "#403D39"
                     ,"Professional" = "#252422"
@@ -1219,7 +1228,7 @@ server <- function(input, output, session) {
             ) +
             scale_fill_manual(
                 values = c(
-                    "Family" = "#FFFCF2"
+                    "Family" = "#A8B333"
                     ,"Health" = "#CCC5B9"
                     ,"Finance" = "#403D39"
                     ,"Professional" = "#252422"
@@ -1230,6 +1239,62 @@ server <- function(input, output, session) {
             ) +
             coord_cartesian(
                 xlim = c(0, maxcnt)
+            )
+        
+    })
+    
+    output$ana_daily <- renderPlot({
+        
+        rv$dat_tsk %>% 
+            filter(
+                TaskGroup != "Ash"
+            ) %>% 
+            mutate(
+                StartHour = as.integer(substr(StartTime, 1, 2))
+                ,StartMinute = as.integer(substr(StartTime, 3, 4))
+                ,EndHour = as.integer(substr(EndTime, 1, 2))
+                ,EndMinute = as.integer(substr(EndTime, 3, 4))
+                ,StartDayMinute = (StartHour * 60) + StartMinute
+                ,EndDayMinute = (EndHour * 60) + EndMinute
+                ,StartDayHour = StartDayMinute / 60
+                ,StartDayHour = ifelse(StartDayHour < 3.5, StartDayHour + 24, StartDayHour)
+                ,EndDayHour = EndDayMinute / 60
+                ,EndDayHour = ifelse(EndDayHour <= 3.5, EndDayHour + 24, EndDayHour)
+                ,TaskDate = as_date(TaskDate)
+            ) %>% 
+            ggplot() +
+            geom_vline(aes(xintercept = 7.5), color = "tomato", size = 1) +
+            geom_vline(aes(xintercept = 12.5), color = "tomato", size = 1) +
+            geom_vline(aes(xintercept = 17), color = "tomato", size = 1) +
+            geom_vline(aes(xintercept = 20), color = "tomato", size = 1) +
+            geom_vline(aes(xintercept = 24), color = "tomato", size = 1) +
+            geom_segment(aes(x = StartDayHour, xend = EndDayHour, y = TaskDate, yend = TaskDate, color = TaskGroup), size = 5) +
+            theme_tsk() +
+            theme(
+                axis.text.x = element_text(margin = margin(b = 10))
+                ,axis.text.y = element_text(margin = margin(r = -20, l = 10))
+                ,legend.position = "top"
+                ,legend.text = element_text(size = 13)
+            ) +
+            labs(
+                x = "Hour"
+                ,y = "Date"
+                ,color = ""
+            ) +
+            scale_x_continuous(
+                breaks = c(seq(0, 24, 2))
+                ,labels = c(seq(0, 24, 2))
+            ) +
+            scale_color_manual(
+                values = c(
+                    "Family" = "#A8B333"
+                    ,"Health" = "#CCC5B9"
+                    ,"Finance" = "#403D39"
+                    ,"Professional" = "#252422"
+                    ,"Skills" = "#EB5E28"
+                    ,"Hobby" = "#F7AEF8"
+                    ,"Waste" = "#B388EB"
+                )
             )
         
     })
@@ -1405,13 +1470,12 @@ server <- function(input, output, session) {
                 ,OnTarget = BooksPerMonth >= BooksPerMonthTarget
             ) %>% 
             ggplot() +
-            geom_text(aes(x = 1, y = 1, label = paste0(BookType, "\n", round(BooksPerMonth, 1)), color = OnTarget), size = 18) +
+            geom_text(aes(x = 1, y = 1, label = paste0(BookType, "s: ", round(BooksPerMonth, 1)), color = OnTarget), size = 16) +
             theme_tsk() +
             theme(
                 axis.title = element_blank()
                 ,axis.text = element_blank()
-                ,strip.text = element_blank()
-                ,strip.background = element_blank()
+                ,strip.text = element_text(size = 15, face = "bold")
             ) +
             scale_color_manual(
                 values = c(
