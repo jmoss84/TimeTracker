@@ -27,6 +27,14 @@ task_groups <- c(
     ,""
 )
 
+month_starts <- seq(1, 12, 1)
+for (i in 1:12) {
+    if (nchar(month_starts[i]) == 1) {
+        month_starts[i] <- paste0("0", month_starts[i])
+    }
+}
+month_starts <- as_date(paste0("2021-", month_starts, "-01"))
+
 conf <- config::get()
 
 theme_tsk <- function() {
@@ -60,6 +68,7 @@ ui <- navbarPage(
                 ),
                 
                 mainPanel(
+                    width = 10,
                     column(
                         width = 8,
                         h2("Enter Tasks", align = "center"),
@@ -212,6 +221,7 @@ ui <- navbarPage(
                 ),
                 
                 mainPanel(
+                    width = 10,
                     column(
                         width = 8,
                         h2("Reading Data", align = "center"),
@@ -318,6 +328,7 @@ ui <- navbarPage(
                 ),
                 
                 mainPanel(
+                    width = 10,
                     column(
                         width = 8,
                         h2("Movie Data", align = "center"),
@@ -439,6 +450,7 @@ ui <- navbarPage(
                 ),
                 
                 mainPanel(
+                    width = 10,
                     column(
                         width = 8,
                         h2("Cooking Data", align = "center"),
@@ -574,6 +586,46 @@ ui <- navbarPage(
         tabPanel(
             "Books",
             fluidPage(
+                
+                sidebarLayout(
+                    sidebarPanel(
+                        width = 2,
+                        hr(),
+                        tags$img(width = "100%", src = "clock.jpg"),
+                        hr()
+                    ),
+                    
+                    mainPanel(
+                        width = 10,
+                        h2("Analyses", align = "center"),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 12,
+                                plotOutput("tska_bookscomp", height = 100),
+                                hr()
+                            )
+                        ),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                h3("Average Book Score", align = "center"),
+                                hr(),
+                                h3("Books Per Month", align = "center"),
+                                hr(),
+                                h3("Average Completion Time", align = "center"),
+                                hr()
+                            ),
+                            column(
+                                width = 8,
+                                h3("Book Quality", align = "center"),
+                                hr(),
+                                h3("Book Time", align = "center"),
+                                hr()
+                            )
+                        )
+                    )
+                )
                 
             )
             
@@ -1295,6 +1347,42 @@ server <- function(input, output, session) {
             labs(
                 x = "Meal Date"
                 ,y = "Prep Time"
+            )
+        
+    })
+    
+    output$tska_bookscomp <- renderPlot({
+        
+        rv$dat_bok %>% 
+            mutate(
+                Lane = ifelse(BookType == "Book", 1, 2)
+                ,CompletionDate = date(CompletionDate)
+            ) %>% 
+            ggplot(aes(x = CompletionDate)) +
+            geom_point(aes(y = Lane, size = BookScore, color = BookType), alpha = 0.5) +
+            theme_tsk() +
+            theme(
+                axis.title.y = element_blank()
+                ,axis.text.y = element_blank()
+            ) +
+            labs(
+                x = "Date Finished"
+            ) +
+            scale_x_date(
+                limits = c(as_date("2021-01-01"), as_date("2022-01-01"))
+                ,breaks = month_starts
+            ) +
+            scale_color_manual(
+                values = c(
+                    "Book" = "tomato"
+                    ,"Audiobook" = "darkorange1"
+                )
+            ) +
+            scale_size_continuous(
+                range = c(3, 10)
+            ) +
+            coord_cartesian(
+                ylim = c(0.5, 2.5)
             )
         
     })
