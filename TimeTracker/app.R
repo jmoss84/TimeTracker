@@ -668,7 +668,7 @@ server <- function(input, output, session) {
         dat_cok = dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Meals;"
-        )
+        ),
         
         dat_bok = dbGetQuery(
             conn = con_tsk,
