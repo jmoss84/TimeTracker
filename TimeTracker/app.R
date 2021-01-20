@@ -200,6 +200,112 @@ ui <- navbarPage(
     ),
     
     tabPanel(
+        "Books",
+        fluidPage(
+            
+            sidebarLayout(
+                sidebarPanel(
+                    width = 2,
+                    hr(),
+                    tags$img(width = "100%", src = "clock.jpg"),
+                    hr()
+                ),
+                
+                mainPanel(
+                    column(
+                        width = 8,
+                        h2("Reading Data", align = "center"),
+                        hr(),
+                        h3("Enter Books", align = "center"),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                dateInput(
+                                    "bok_date",
+                                    label = "Completion date:",
+                                    value = today(),
+                                    weekstart = 1
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                textInput(
+                                    "bok_name",
+                                    label = "Book Name:"
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                numericInput(
+                                    "bok_score",
+                                    label = "Book Score:",
+                                    value = 5,
+                                    min = 0,
+                                    max = 10,
+                                    step = 0.1
+                                )
+                            )
+                        ),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                selectInput(
+                                    "bok_type",
+                                    label = "Book Type:",
+                                    choices = c("Book", "Audiobook", ""),
+                                    selected = "",
+                                    multiple = F
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                selectInput(
+                                    "bok_genre",
+                                    label = "Book Genre:",
+                                    choices = c("Personal Development", "Professional Development", "Non-Fiction", "Autobiography", "Fantasy", "Sci-Fi", "Classic", "Other Fiction", "Other Non-Fiction", ""),
+                                    selected = "",
+                                    multiple = F
+                                )
+                            ),
+                            column(
+                                width = 4
+                            )
+                        ),
+                        hr(),
+                        fluidRow(
+                            column(
+                                width = 4,
+                                actionButton(
+                                    "bok_go_book",
+                                    label = "Submit Book",
+                                    icon = icon("check")
+                                )
+                            ),
+                            column(
+                                width = 4
+                            ),
+                            column(
+                                width = 4
+                            )
+                        )
+                    ),
+                    column(
+                        width = 4,
+                        column(
+                            width = 12,
+                            h2("Book Table", align = "center"),
+                            hr(),
+                            dataTableOutput("bok_tbl_books")
+                        )
+                    )
+                )
+            )
+            
+        )
+    ),
+    
+    tabPanel(
         "Movie Night",
         fluidPage(
             
@@ -466,6 +572,14 @@ ui <- navbarPage(
         ),
         
         tabPanel(
+            "Books",
+            fluidPage(
+                
+            )
+            
+        ),
+        
+        tabPanel(
             "Movies",
             fluidPage(
                 
@@ -556,6 +670,11 @@ server <- function(input, output, session) {
             statement = "SELECT * FROM dbo.Meals;"
         )
         
+        dat_bok = dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Books;"
+        )
+        
     )
     
     dbDisconnect(con_tsk)
@@ -575,6 +694,12 @@ server <- function(input, output, session) {
         updateSelectInput(session, "sub_group2", selected = "")
         updateSelectInput(session, "sub_subgroup2", selected = "")
         updateTextInput(session, "sub_notes2", value = "")
+        
+        updateDateInput(session, "bok_date", value = today())
+        updateTextInput(session, "bok_name", value = "")
+        updateNumericInput(session, "bok_score", value = 5)
+        updateSelectInput(session, "bok_type", selected = "")
+        updateSelectInput(session, "bok_genre", selected = "")
         
         updateDateInput(session, "mov_date", value = today())
         updateTextInput(session, "mov_start", value = "")
@@ -620,6 +745,11 @@ server <- function(input, output, session) {
         rv$dat_cok <- dbGetQuery(
             conn = con_tsk,
             statement = "SELECT * FROM dbo.Meals;"
+        )
+        
+        rv$dat_bok <- dbGetQuery(
+            conn = con_tsk,
+            statement = "SELECT * FROM dbo.Books;"
         )
         
         dbDisconnect(con_tsk)
@@ -791,6 +921,63 @@ server <- function(input, output, session) {
                 select(
                     -ID
                     ,-TaskLevel
+                ) %>% 
+                arrange(
+                    desc(ImportTimestamp)
+                )
+            
+        )
+        
+    })
+    
+    observeEvent(input$bok_go_book, {
+        
+        data <- data.frame(
+            BookName = input$bok_name
+            ,CompletionDate = input$bok_date
+            ,BookScore = input$bok_score
+            ,BookType = input$bok_type
+            ,BookGenre = input$bok_genre
+        )
+        
+        validate <- (
+            !is.na(input$bok_name)
+            & !is.na(input$bok_genre)
+            & input$bok_name != ""
+            & input$bok_genre != ""
+        )
+        
+        if (validate == T) {
+            
+            con_tsk <- dbConnect(
+                odbc::odbc(),
+                .connection_string = conf$con_str,
+                timeout = 5
+            )
+            
+            dbAppendTable(
+                conn = con_tsk,
+                name = SQL(conf$tables$books),
+                value = data
+            )
+            
+            dbDisconnect(con_tsk)
+            
+            refresh()
+            
+        }
+        
+    })
+    
+    output$bok_tbl_books <- renderDataTable({
+        
+        DT::datatable(
+            options = list(pageLength = 8, scrollX = T),
+            rownames = F,
+            
+            rv$dat_bok %>% 
+                select(
+                    -ID
                 ) %>% 
                 arrange(
                     desc(ImportTimestamp)
