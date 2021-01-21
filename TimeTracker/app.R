@@ -574,7 +574,9 @@ ui <- navbarPage(
                             h3("Parenting", align = "center"),
                             plotOutput("ana_parenting", height = 300),
                             hr(),
-                            h3("Active Hours Per Month", align = "center")
+                            h3("Active Hours Per Week", align = "center"),
+                            plotOutput("ana_activehoursperweek", height = 100),
+                            hr()
                         ),
                         column(
                             width = 4,
@@ -1302,7 +1304,7 @@ server <- function(input, output, session) {
     
     output$ana_parenting <- renderPlot({
         
-        dat_tsk %>% 
+        rv$dat_tsk %>% 
             filter(
                 TaskSubGroup == "Logan"
                 ,!Notes %in% c("Bathtime", "")
@@ -1366,6 +1368,71 @@ server <- function(input, output, session) {
                 )
             )
         
+    })
+    
+    output$ana_activehoursperweek <- renderPlot({
+        
+        weeks <- isoweek(today())
+        
+        rv$dat_tsk %>% 
+            filter(
+                TaskSubGroup == "Logan"
+                ,!Notes %in% c("Bathtime", "")
+            ) %>% 
+            mutate(
+                Temp_All = str_extract(Notes, "[[:digit:]][[:digit:]][[:digit:]][apt]")
+                ,Temp_A = str_extract(Notes, "[[:digit:]][[:digit:]]a")
+                ,Temp_A = ifelse(!is.na(Temp_All), NA, Temp_A)
+                ,Temp_T = str_extract(Notes, "[[:digit:]][[:digit:]]t")
+                ,Temp_T = ifelse(!is.na(Temp_All), NA, Temp_T)
+                ,Temp_P = str_extract(Notes, "[[:digit:]][[:digit:]]p")
+                ,Temp_P = ifelse(!is.na(Temp_All), NA, Temp_P)
+                ,Plan = gsub("[[:digit:]][[:digit:]][[:digit:]]", "", Temp_All)
+                ,Plan = ifelse(is.na(Plan), "", Plan)
+                ,Temp_Active = as.integer(gsub("[[:alpha:]]", "", Temp_A)) / 100
+                ,Temp_Active = ifelse(is.na(Temp_Active), 0, Temp_Active)
+                ,Temp_TV = as.integer(gsub("[[:alpha:]]", "", Temp_T)) / 100
+                ,Temp_TV = ifelse(is.na(Temp_TV), 0, Temp_TV)
+                ,Temp_Passive = as.integer(gsub("[[:alpha:]]", "", Temp_P)) / 100
+                ,Temp_Passive = ifelse(is.na(Temp_Passive), 0, Temp_Passive)
+                ,Active = ifelse(Plan == "a", 1, Temp_Active)
+                ,TV = ifelse(Plan == "t", 1, Temp_TV)
+                ,Passive = ifelse(Plan == "p", 1, Temp_Passive)
+                ,Active = Active * TimeSpent
+                ,TV = TV * TimeSpent
+                ,Passive = Passive * TimeSpent
+                ,CrossCheck = Active + TV + Passive
+            ) %>% 
+            select(
+                -c(Temp_All, Temp_A, Temp_T, Temp_P, Plan, Temp_Active, Temp_TV, Temp_Passive, CrossCheck)
+            ) %>% 
+            group_by(
+                "Total"
+            ) %>% 
+            summarise(
+                ActivePerWeek = sum(Active, na.rm = T)
+            ) %>% 
+            mutate(
+                ActivePerWeek = as.integer(ActivePerWeek / 60) / weeks
+                ,ActivePerWeek = round(ActivePerWeek, 1)
+                ,OnTarget = ifelse(ActivePerWeek >= 5, T, F)
+            ) %>% 
+            ggplot() +
+            geom_text(aes(x = 1, y = 1, label = round(ActivePerWeek, 1), color = OnTarget), size = 18) +
+            theme_tsk() +
+            theme(
+                axis.title = element_blank()
+                ,axis.text = element_blank()
+            ) +
+            labs(
+                
+            ) +
+            scale_color_manual(
+                values = c(
+                    "TRUE" = "cyan"
+                    ,"FALSE" = "tomato"
+                )
+            )
         
     })
     
