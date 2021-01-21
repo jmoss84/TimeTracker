@@ -569,21 +569,22 @@ ui <- navbarPage(
                         column(
                             width = 4,
                             h3("Task Groups", align = "center"),
+                            plotOutput("ana_grps", height = 300),
                             hr(),
-                            plotOutput("ana_grps", height = 750),
-                            hr()
+                            h3("Parenting", align = "center"),
+                            plotOutput("ana_parenting", height = 300),
+                            hr(),
+                            h3("Active Hours Per Month", align = "center")
                         ),
                         column(
                             width = 4,
                             h3("Task Sub Groups", align = "center"),
-                            hr(),
                             plotOutput("ana_subs", height = 750),
                             hr()
                         ),
                         column(
                             width = 4,
                             h3("Daily Outlook", align = "center"),
-                            hr(),
                             plotOutput("ana_daily", height = 750),
                             hr()
                         )
@@ -1296,6 +1297,75 @@ server <- function(input, output, session) {
                     ,"Waste" = "#B388EB"
                 )
             )
+        
+    })
+    
+    output$ana_parenting <- renderPlot({
+        
+        dat_tsk %>% 
+            filter(
+                TaskSubGroup == "Logan"
+                ,!Notes %in% c("Bathtime", "")
+            ) %>% 
+            mutate(
+                Temp_All = str_extract(Notes, "[[:digit:]][[:digit:]][[:digit:]][apt]")
+                ,Temp_A = str_extract(Notes, "[[:digit:]][[:digit:]]a")
+                ,Temp_A = ifelse(!is.na(Temp_All), NA, Temp_A)
+                ,Temp_T = str_extract(Notes, "[[:digit:]][[:digit:]]t")
+                ,Temp_T = ifelse(!is.na(Temp_All), NA, Temp_T)
+                ,Temp_P = str_extract(Notes, "[[:digit:]][[:digit:]]p")
+                ,Temp_P = ifelse(!is.na(Temp_All), NA, Temp_P)
+                ,Plan = gsub("[[:digit:]][[:digit:]][[:digit:]]", "", Temp_All)
+                ,Plan = ifelse(is.na(Plan), "", Plan)
+                ,Temp_Active = as.integer(gsub("[[:alpha:]]", "", Temp_A)) / 100
+                ,Temp_Active = ifelse(is.na(Temp_Active), 0, Temp_Active)
+                ,Temp_TV = as.integer(gsub("[[:alpha:]]", "", Temp_T)) / 100
+                ,Temp_TV = ifelse(is.na(Temp_TV), 0, Temp_TV)
+                ,Temp_Passive = as.integer(gsub("[[:alpha:]]", "", Temp_P)) / 100
+                ,Temp_Passive = ifelse(is.na(Temp_Passive), 0, Temp_Passive)
+                ,Active = ifelse(Plan == "a", 1, Temp_Active)
+                ,TV = ifelse(Plan == "t", 1, Temp_TV)
+                ,Passive = ifelse(Plan == "p", 1, Temp_Passive)
+                ,Active = Active * TimeSpent
+                ,TV = TV * TimeSpent
+                ,Passive = Passive * TimeSpent
+                ,CrossCheck = Active + TV + Passive
+            ) %>% 
+            select(
+                -c(Temp_All, Temp_A, Temp_T, Temp_P, Plan, Temp_Active, Temp_TV, Temp_Passive, CrossCheck)
+            ) %>% 
+            group_by(
+                "Totals"
+            ) %>% 
+            summarise(
+                Active = sum(Active, na.rm = T)
+                ,TV = sum(TV, na.rm = T)
+                ,Passive = sum(Passive, na.rm = T)
+            ) %>% 
+            pivot_longer(
+                cols = -`"Totals"`
+                ,names_to = "Metric"
+                ,values_to = "Value"
+            ) %>% 
+            ggplot() +
+            geom_bar(aes(x = reorder(Metric, -Value), weight = as.integer(Value), fill = Metric), width = 0.8, color = "black") +
+            theme_tsk() +
+            theme(
+                axis.text.x = element_text(margin = margin(b = 5, t = -15))
+                ,axis.text.y = element_text(margin = margin(r = -20))
+            ) +
+            labs(
+                x = "Group"
+                ,y = "Total Minutes"
+            ) +
+            scale_fill_manual(
+                values = c(
+                    "Active" = "#24B7E9"
+                    ,"TV" = "#D102A9"
+                    ,"Passive" = "#B9D121"
+                )
+            )
+        
         
     })
     
