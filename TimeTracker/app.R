@@ -496,7 +496,7 @@ ui <- navbarPage(
                                 selectInput(
                                     "cok_book",
                                     label = "Recipe Book:",
-                                    choices = c("Jamie Recipe", "Gino's Pasta", "Nick Naird Scottish Cookery", "What Mummy Makes", "Other", ""),
+                                    choices = c("Jamie Recipe", "Gino's Pasta", "Nick Naird Scottish Cookery", "What Mummy Makes", "Kitchen", "Granny's Favourites", "Other", ""),
                                     selected = "",
                                     multiple = F
                                 )
