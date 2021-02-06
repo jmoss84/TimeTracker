@@ -1,0 +1,10 @@
+{
+	"name": "kv_jamiemclaughlin",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://kv-jamiemclaughlin.vault.azure.net/"
+		}
+	}
+}

@@ -1,0 +1,24 @@
+{
+	"name": "Overnight",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Archive",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 3,
+				"startTime": "2021-02-07T02:30:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}

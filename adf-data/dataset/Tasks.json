@@ -1,0 +1,56 @@
+{
+	"name": "Tasks",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "jamiemclaughlin",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TaskDate",
+				"type": "date"
+			},
+			{
+				"name": "StartTime",
+				"type": "varchar"
+			},
+			{
+				"name": "EndTime",
+				"type": "varchar"
+			},
+			{
+				"name": "TaskGroup",
+				"type": "varchar"
+			},
+			{
+				"name": "TaskSubGroup",
+				"type": "varchar"
+			},
+			{
+				"name": "Notes",
+				"type": "varchar"
+			},
+			{
+				"name": "ImportTimestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "TaskLevel",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Tasks"
+		}
+	}
+}
