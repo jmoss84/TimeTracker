@@ -709,7 +709,7 @@ server <- function(input, output, session) {
         
         dat_tsk = dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
+            statement = conf$queries$all_tasks
         ) %>% 
                 mutate(
                     StartTime = gsub("[[:punct:]]", "", StartTime)
@@ -725,17 +725,17 @@ server <- function(input, output, session) {
         
         dat_mov = dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Movies;"
+            statement = conf$queries$all_movies
         ),
         
         dat_cok = dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Meals;"
+            statement = conf$queries$all_meals
         ),
         
         dat_bok = dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Books;"
+            statement = conf$queries$all_books
         )
         
     )
@@ -786,7 +786,7 @@ server <- function(input, output, session) {
         
         rv$dat_tsk <- dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Tasks WHERE Notes <> 'Test';"
+            statement = conf$queries$all_tasks
         ) %>% 
             mutate(
                 StartTime = gsub("[[:punct:]]", "", StartTime)
@@ -802,17 +802,17 @@ server <- function(input, output, session) {
         
         rv$dat_mov <- dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Movies;"
+            statement = conf$queries$all_movies
         )
         
         rv$dat_cok <- dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Meals;"
+            statement = conf$queries$all_meals
         )
         
         rv$dat_bok <- dbGetQuery(
             conn = con_tsk,
-            statement = "SELECT * FROM dbo.Books;"
+            statement = conf$queries$all_books
         )
         
         dbDisconnect(con_tsk)
