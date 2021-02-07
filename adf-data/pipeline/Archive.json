@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Archive Tasks",
+				"name": "TimeTracker - Archive Tasks",
 				"description": "A trigger to archive the Tasks table.",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [],
@@ -24,11 +24,11 @@
 				}
 			},
 			{
-				"name": "Archive Books",
+				"name": "TimeTracker - Archive Books",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Archive Tasks",
+						"activity": "TimeTracker - Archive Tasks",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -51,11 +51,11 @@
 				}
 			},
 			{
-				"name": "Archive Movies",
+				"name": "TimeTracker - Archive Movies",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Archive Books",
+						"activity": "TimeTracker - Archive Books",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -78,11 +78,11 @@
 				}
 			},
 			{
-				"name": "Archive Meals",
+				"name": "TimeTracker - Archive Meals",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Archive Movies",
+						"activity": "TimeTracker - Archive Movies",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -98,6 +98,107 @@
 				"userProperties": [],
 				"typeProperties": {
 					"storedProcedureName": "[timetracker].[sp_MealArchive]"
+				},
+				"linkedServiceName": {
+					"referenceName": "jamiemclaughlin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "MFMS - Archive Entries",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[mfms].[sp_EntriesArchive]"
+				},
+				"linkedServiceName": {
+					"referenceName": "jamiemclaughlin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "MFMS - Archive Activity",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "MFMS - Archive Entries",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[mfms].[sp_ActivityArchive]"
+				},
+				"linkedServiceName": {
+					"referenceName": "jamiemclaughlin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "MFMS - Archive Users",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "MFMS - Archive Activity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[mfms].[sp_UsersArchive]"
+				},
+				"linkedServiceName": {
+					"referenceName": "jamiemclaughlin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "MFMS - Archive Targets",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "MFMS - Archive Users",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[mfms].[sp_TargetsArchive]"
 				},
 				"linkedServiceName": {
 					"referenceName": "jamiemclaughlin",
