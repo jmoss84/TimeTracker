@@ -1,0 +1,21 @@
+{
+	"name": "jamiemclaughlin",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "kv_jamiemclaughlin",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "jamiemclaughlin-string"
+			}
+		},
+		"connectVia": {
+			"referenceName": "jamiemclaughlin-integrationruntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
