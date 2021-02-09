@@ -396,9 +396,10 @@
 				"typeProperties": {
 					"recurrence": {
 						"frequency": "Day",
-						"interval": 3,
+						"interval": 1,
 						"startTime": "2021-02-07T02:30:00Z",
-						"timeZone": "UTC"
+						"timeZone": "UTC",
+						"schedule": {}
 					}
 				}
 			},
