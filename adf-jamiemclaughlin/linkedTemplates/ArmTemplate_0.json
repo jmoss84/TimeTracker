@@ -173,7 +173,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"storedProcedureName": "[[timetracker].[sp_MealArchive]"
+							"storedProcedureName": "[[timetracker].[sp_MovieArchive]"
 						},
 						"linkedServiceName": {
 							"referenceName": "jamiemclaughlin",
