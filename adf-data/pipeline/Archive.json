@@ -16,7 +16,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[dbo].[sp_TaskArchive]"
+					"storedProcedureName": "[timetracker].[sp_TaskArchive]"
 				},
 				"linkedServiceName": {
 					"referenceName": "jamiemclaughlin",
@@ -70,7 +70,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[timetracker].[sp_MealArchive]"
+					"storedProcedureName": "[timetracker].[sp_MovieArchive]"
 				},
 				"linkedServiceName": {
 					"referenceName": "jamiemclaughlin",
