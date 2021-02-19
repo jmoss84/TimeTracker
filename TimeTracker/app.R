@@ -578,26 +578,29 @@ ui <- navbarPage(
                             plotOutput("ana_activehoursperweek", height = 100),
                             hr()
                         ),
-                        fluidRow(
+                        column(
                             width = 8,
-                            column(
-                                width = 4,
-                                h3("Task Sub Groups", align = "center"),
-                                plotOutput("ana_subs", height = 550),
-                                hr()
+                            fluidRow(
+                                column(
+                                    width = 6,
+                                    h3("Task Sub Groups", align = "center"),
+                                    plotOutput("ana_subs", height = 550),
+                                    hr()
+                                ),
+                                column(
+                                    width = 6,
+                                    h3("Daily Outlook", align = "center"),
+                                    plotOutput("ana_daily", height = 550),
+                                    hr()
+                                )
                             ),
-                            column(
-                                width = 4,
-                                h3("Daily Outlook", align = "center"),
-                                plotOutput("ana_daily", height = 550),
-                                hr()
-                            )
-                        ),
-                        fluidRow(
-                            column(
-                                width = 12,
-                                plotOutput("tska_weeklyactive", height = 200),
-                                hr()
+                            fluidRow(
+                                width = 8,
+                                column(
+                                    width = 12,
+                                    plotOutput("tska_weeklyactive", height = 200),
+                                    hr()
+                                )
                             )
                         )
                     )
@@ -1261,6 +1264,7 @@ server <- function(input, output, session) {
         rv$dat_tsk %>% 
             filter(
                 TaskGroup != "Ash"
+                ,TaskDate >= today() - 31
             ) %>% 
             mutate(
                 StartHour = as.integer(substr(StartTime, 1, 2))
@@ -1448,7 +1452,7 @@ server <- function(input, output, session) {
     
     output$tska_weeklyactive <- renderPlot({
         
-        dat_tsk %>% 
+        rv$dat_tsk %>% 
             filter(
                 TaskSubGroup == "Logan"
                 ,!Notes %in% c("Bathtime", "")
