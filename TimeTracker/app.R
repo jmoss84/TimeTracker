@@ -52,7 +52,7 @@ theme_tsk <- function() {
 ui <- navbarPage(
     
     "Time Tracker",
-    theme = shinytheme("simplex"),
+    theme = shinytheme("yeti"),
     collapsible = T,
     
     tabPanel(
@@ -578,17 +578,27 @@ ui <- navbarPage(
                             plotOutput("ana_activehoursperweek", height = 100),
                             hr()
                         ),
-                        column(
-                            width = 4,
-                            h3("Task Sub Groups", align = "center"),
-                            plotOutput("ana_subs", height = 750),
-                            hr()
+                        fluidRow(
+                            width = 8,
+                            column(
+                                width = 4,
+                                h3("Task Sub Groups", align = "center"),
+                                plotOutput("ana_subs", height = 550),
+                                hr()
+                            ),
+                            column(
+                                width = 4,
+                                h3("Daily Outlook", align = "center"),
+                                plotOutput("ana_daily", height = 550),
+                                hr()
+                            )
                         ),
-                        column(
-                            width = 4,
-                            h3("Daily Outlook", align = "center"),
-                            plotOutput("ana_daily", height = 750),
-                            hr()
+                        fluidRow(
+                            column(
+                                width = 12,
+                                plotOutput("tska_weeklyactive", height = 200),
+                                hr()
+                            )
                         )
                     )
                 )
@@ -1431,6 +1441,75 @@ server <- function(input, output, session) {
                 values = c(
                     "TRUE" = "cyan"
                     ,"FALSE" = "tomato"
+                )
+            )
+        
+    })
+    
+    output$tska_weeklyactive <- renderPlot({
+        
+        dat_tsk %>% 
+            filter(
+                TaskSubGroup == "Logan"
+                ,!Notes %in% c("Bathtime", "")
+            ) %>% 
+            mutate(
+                Temp_All = str_extract(Notes, "[[:digit:]][[:digit:]][[:digit:]][apt]")
+                ,Temp_A = str_extract(Notes, "[[:digit:]][[:digit:]]a")
+                ,Temp_A = ifelse(!is.na(Temp_All), NA, Temp_A)
+                ,Temp_T = str_extract(Notes, "[[:digit:]][[:digit:]]t")
+                ,Temp_T = ifelse(!is.na(Temp_All), NA, Temp_T)
+                ,Temp_P = str_extract(Notes, "[[:digit:]][[:digit:]]p")
+                ,Temp_P = ifelse(!is.na(Temp_All), NA, Temp_P)
+                ,Plan = gsub("[[:digit:]][[:digit:]][[:digit:]]", "", Temp_All)
+                ,Plan = ifelse(is.na(Plan), "", Plan)
+                ,Temp_Active = as.integer(gsub("[[:alpha:]]", "", Temp_A)) / 100
+                ,Temp_Active = ifelse(is.na(Temp_Active), 0, Temp_Active)
+                ,Temp_TV = as.integer(gsub("[[:alpha:]]", "", Temp_T)) / 100
+                ,Temp_TV = ifelse(is.na(Temp_TV), 0, Temp_TV)
+                ,Temp_Passive = as.integer(gsub("[[:alpha:]]", "", Temp_P)) / 100
+                ,Temp_Passive = ifelse(is.na(Temp_Passive), 0, Temp_Passive)
+                ,Active = ifelse(Plan == "a", 1, Temp_Active)
+                ,TV = ifelse(Plan == "t", 1, Temp_TV)
+                ,Passive = ifelse(Plan == "p", 1, Temp_Passive)
+                ,Active = Active * TimeSpent
+                ,TV = TV * TimeSpent
+                ,Passive = Passive * TimeSpent
+                ,CrossCheck = Active + TV + Passive
+                ,Week = isoweek(TaskDate)
+            ) %>% 
+            select(
+                -c(Temp_All, Temp_A, Temp_T, Temp_P, Plan, Temp_Active, Temp_TV, Temp_Passive, CrossCheck)
+            ) %>% 
+            filter(
+                Week <50
+            ) %>% 
+            group_by(
+                Week
+            ) %>% 
+            summarise(
+                ActivePerWeek = sum(Active, na.rm = T)
+            ) %>% 
+            mutate(
+                ActivePerWeek = as.integer(ActivePerWeek / 60)
+                ,ActivePerWeek = round(ActivePerWeek, 1)
+                ,OnTarget = ifelse(ActivePerWeek >= 5, T, F)
+            ) %>% 
+            ggplot() +
+            geom_line(aes(x = Week, y = ActivePerWeek), color = "grey90", size = 0.8) +
+            geom_point(aes(x = Week, y = ActivePerWeek, color = OnTarget), size = 4) +
+            theme_tsk() +
+            labs(
+                
+            ) +
+            scale_x_continuous(
+                breaks = c(seq(1, 52, 1))
+                ,labels = c(seq(1, 52, 1))
+            ) +
+            scale_color_manual(
+                values = c(
+                    "TRUE" = "seagreen"
+                    ,"FALSE" = "navy"
                 )
             )
         
